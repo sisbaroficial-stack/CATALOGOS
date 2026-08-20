@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: catalogo-app
+    runtime: python
+    plan: free
+
+    buildCommand: bash build.sh
+    startCommand: gunicorn catalogo_app.wsgi:application --bind 0.0.0.0:$PORT
+
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "False"
+
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+
+      - key: DJANGO_SECURE_SSL_REDIRECT
+        value: "True"
+
+      - key: SERVE_MEDIA
+        value: "True"
+
+      - key: MEDIA_ROOT
+        value: "/tmp/media"
+
+      - key: DATABASE_URL
+        fromDatabase:
+          name: catalogo-postgres
+          property: connectionString
+
+      - key: ADMIN_EMAIL
+        sync: false
+
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: catalogo-postgres
+    plan: free

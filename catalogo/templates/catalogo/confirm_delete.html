@@ -1,0 +1,21 @@
+{% extends 'catalogo/base_catalogo.html' %}
+
+{% block title %}Eliminar {{ tipo }}{% endblock %}
+{% block hero_title %}Eliminar {{ tipo }}{% endblock %}
+{% block hero_text %}Esta acción no se puede deshacer.{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="surface-card p-4 text-center">
+            <h2 class="h4 fw-bold mb-2">¿Eliminar {{ object }}?</h2>
+            <p class="text-secondary mb-4">Confirma esta acción para continuar.</p>
+            <form method="post" class="d-flex justify-content-center gap-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Eliminar</button>
+                <a href="{% url 'panel_dashboard' %}" class="btn btn-outline-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'catalogo/base_catalogo.html' %}
+
+{% block hero_title %}{{ config.nombre_negocio|default:'Catálogo' }}{% endblock %}
+{% block hero_text %}{{ config.descripcion_publica|default:'Explora productos y escribe por WhatsApp para hacer tu pedido.' }}{% endblock %}
+
+{% block hero_search %}
+<div class="catalog-search mt-3">
+    <form method="get">
+        <input type="hidden" name="vista" value="{{ vista }}">
+        <input type="hidden" name="page_size" value="{{ page_size }}">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-lg-6"><input type="search" name="q" class="form-control" placeholder="Buscar productos..." value="{{ busqueda }}" data-catalog-search-input></div>
+            <div class="col-12 col-md-8 col-lg-4">
+                <select name="album" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    {% for album in albums %}<option value="{{ album.id }}" {% if album_seleccionado|stringformat:"s" == album.id|stringformat:"s" %}selected{% endif %}>{{ album.nombre }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-4 col-lg-2 d-grid"><button type="submit" class="btn btn-light fw-semibold catalog-search-button"><i class="bi bi-search me-2"></i>Buscar</button></div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="catalog-card p-3 p-md-4 mb-4">
+    <div class="catalog-toolbar mb-4">
+        <div>
+            <h2 class="h5 mb-1 fw-bold">Productos disponibles</h2>
+            <div class="text-secondary small">{{ page_obj.paginator.count }} productos encontrados.</div>
+        </div>
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="hidden" name="q" value="{{ busqueda }}"><input type="hidden" name="album" value="{{ album_seleccionado }}">
+            <select name="vista" class="form-select form-select-sm catalog-control" onchange="this.form.submit()">
+                <option value="tarjetas" {% if vista == 'tarjetas' %}selected{% endif %}>Tarjetas</option>
+                <option value="lista" {% if vista == 'lista' %}selected{% endif %}>Lista</option>
+            </select>
+            <select name="page_size" class="form-select form-select-sm catalog-control" onchange="this.form.submit()">
+                <option value="20" {% if page_size == 20 %}selected{% endif %}>20 por página</option>
+                <option value="50" {% if page_size == 50 %}selected{% endif %}>50 por página</option>
+                <option value="100" {% if page_size == 100 %}selected{% endif %}>100 por página</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="catalog-products catalog-products-{{ vista }}">
+        {% for producto in productos %}
+            <article class="product-card-shell" data-product-search="{{ producto.nombre }} {{ producto.descripcion }} {{ producto.album.nombre }}" data-catalog-reveal>
+                <div class="product-media">
+                    {% if producto.imagen_principal_url %}<img src="{{ producto.imagen_principal_url }}" alt="{{ producto.nombre }}">{% else %}<div class="product-media-fallback"><div><i class="bi bi-image fs-1 d-block mb-2"></i>Sin imagen</div></div>{% endif %}
+                </div>
+                <div class="product-content p-3 p-md-4">
+                    <span class="product-album" style="background: {{ producto.album.color }};">{{ producto.album.nombre }}</span>
+                    <h3 class="h6 fw-bold mt-2 mb-1">{{ producto.nombre }}</h3>
+                    <div class="product-summary mb-3">{{ producto.descripcion|default:'Sin descripción' }}</div>
+                    <div class="product-price mb-3">{% if config.mostrar_precios %}${{ producto.precio|floatformat:2 }}{% else %}Pregunta el precio{% endif %}</div>
+                    {% if producto.mostrar_stock %}<div class="small mb-3 {% if producto.stock > 0 %}text-success{% else %}text-danger{% endif %}"><i class="bi bi-box-seam me-1"></i>{% if producto.stock > 0 %}{{ producto.stock }} disponibles{% else %}Agotado{% endif %}</div>{% endif %}
+                    <div class="product-actions">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-product-quick-view data-product-name="{{ producto.nombre }}" data-product-description="{{ producto.descripcion|default:'Sin descripción' }}" data-product-price="{% if config.mostrar_precios %}${{ producto.precio|floatformat:2 }}{% else %}Pregunta el precio{% endif %}" data-product-image="{{ producto.imagen_principal_url|default:producto.imagen_principal_placeholder }}" data-product-album="{{ producto.album.nombre }}" data-product-color="{{ producto.album.color }}" data-product-url="{% url 'producto_detalle' producto.id %}" data-product-whatsapp="{{ producto.whatsapp_url }}">Ver detalle</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-catalog-share="1" data-share-title="{{ producto.nombre }}" data-share-text="Mira este producto: {{ producto.nombre }}" data-share-url="{{ request.scheme }}://{{ request.get_host }}{% url 'producto_detalle' producto.id %}"><i class="bi bi-share me-1"></i>Compartir</button>
+                        {% if producto.whatsapp_url %}<a href="{{ producto.whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm"><i class="bi bi-whatsapp me-1"></i>Pedir por WhatsApp</a>{% endif %}
+                    </div>
+                </div>
+            </article>
+        {% empty %}<div class="surface-card p-4 text-center text-secondary">No encontramos productos con esos filtros.</div>{% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="d-flex justify-content-center mt-4" aria-label="Paginación de productos"><ul class="pagination mb-0">
+            {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{{ query_string }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>{% endif %}
+            <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{{ query_string }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>{% endif %}
+        </ul></nav>
+    {% endif %}
+</div>
+{% endblock %}

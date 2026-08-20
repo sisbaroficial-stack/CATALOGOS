@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="{{ config.color_primario|default:'#0d6efd' }}">
+    <link rel="manifest" href="{% url 'pwa_manifest' %}">
+    <link rel="apple-touch-icon" href="{% static 'catalogo/icon.svg' %}">
+    <title>{% block title %}{{ config.nombre_negocio|default:'Catálogo' }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ config.descripcion_publica|default:'Catálogo público de productos' }}{% endblock %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="{% static 'catalogo/css/catalogo.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="catalog-shell" x-data="{ menuOpen: false }" style="--catalog-primary: {{ config.color_primario|default:'#0d6efd' }}; --catalog-primary-dark: {{ config.color_primario|default:'#0d6efd' }};">
+    <header class="catalog-hero">
+        <div class="container catalog-hero-inner">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <a href="{% url 'catalogo_publico' %}" class="catalog-brand">
+                    <span class="catalog-brand-mark">
+                        {% if config.logo %}
+                            <img src="{{ config.logo.url }}" alt="{{ config.nombre_negocio|default:'Catálogo' }}">
+                        {% else %}
+                            <span class="catalog-brand-fallback">{{ config.nombre_negocio|default:'C'|slice:':1' }}</span>
+                        {% endif %}
+                    </span>
+                    <span>
+                        <span class="catalog-brand-name">{{ config.nombre_negocio|default:'Catálogo' }}</span>
+                        <span class="catalog-brand-subtitle d-block">Catálogo digital</span>
+                    </span>
+                </a>
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    <button type="button" class="catalog-chip border-0" data-pwa-install hidden><i class="bi bi-phone"></i>Instalar app</button>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'panel_dashboard' %}" class="catalog-chip"><i class="bi bi-speedometer2"></i>Panel</a>
+                        <a href="{% url 'panel_logout' %}" class="catalog-chip"><i class="bi bi-box-arrow-right"></i>Salir</a>
+                    {% else %}
+                        <a href="{% url 'panel_login' %}" class="catalog-chip"><i class="bi bi-lock"></i>Acceso admin</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="catalog-hero-copy mt-3">
+                <h1>{% block hero_title %}{{ config.nombre_negocio|default:'Catálogo' }}{% endblock %}</h1>
+                <p>{% block hero_text %}{{ config.descripcion_publica|default:'Explora productos, descubre álbumes y escribe por WhatsApp para hacer tu pedido.' }}{% endblock %}</p>
+            </div>
+            {% block hero_search %}{% endblock %}
+        </div>
+    </header>
+
+    <main class="catalog-section">
+        <div class="container">
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} border-0 shadow-sm">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    <footer class="catalog-footer">
+        <div class="container catalog-footer-brand">
+                <div class="small text-secondary mb-1">Catálogo creado con</div>
+                <a href="https://kontrolnova.com/" target="_blank" rel="noopener">KONTROLNOVA</a>
+                <div class="small text-secondary mt-1">Plataforma de gestión, inventario y catálogos digitales.</div>
+        </div>
+    </footer>
+</div>
+
+<div class="modal fade" id="productQuickView" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content product-quick-modal">
+        <div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body pt-2" data-product-modal-content></div>
+    </div></div>
+</div>
+
+{% if whatsapp_url_global %}
+    <a class="floating-whatsapp" href="{{ whatsapp_url_global }}" target="_blank" rel="noopener" aria-label="WhatsApp">
+        <i class="bi bi-whatsapp fs-3"></i>
+    </a>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'catalogo/js/catalogo.js' %}"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('{% url 'pwa_service_worker' %}'));
+    }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
