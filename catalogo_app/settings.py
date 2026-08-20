@@ -94,18 +94,22 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
+# La misma ubicación se entrega explícitamente al storage y a la ruta /media/
+# para que los archivos subidos y los archivos servidos coincidan en Render.
+MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'OPTIONS': {
+            'location': str(MEDIA_ROOT),
+            'base_url': MEDIA_URL,
+        },
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
-MEDIA_URL = '/media/'
-# En Free se usa /tmp/media. Al adjuntar el disco persistente de Render,
-# cambia solo MEDIA_ROOT a /var/data/media; los ImageField/FileField no cambian.
-MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
 SERVE_MEDIA = env_bool('SERVE_MEDIA', DEBUG)
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
