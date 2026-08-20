@@ -2,6 +2,7 @@ services:
   - type: web
     name: catalogo-app
     runtime: python
+    plan: free
     buildCommand: bash build.sh
     startCommand: gunicorn catalogo_app.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
