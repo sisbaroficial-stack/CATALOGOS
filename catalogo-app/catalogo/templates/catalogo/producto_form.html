@@ -1,0 +1,122 @@
+{% extends 'catalogo/base_catalogo.html' %}
+
+{% block title %}{{ mode }} producto{% endblock %}
+{% block hero_title %}{{ mode }} producto{% endblock %}
+{% block hero_text %}Completa la información y, si quieres, agrega una galería de imágenes.{% endblock %}
+
+{% block content %}
+<div class="surface-card p-4">
+    <form method="post" enctype="multipart/form-data" class="d-grid gap-3">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Álbum</label>
+                {{ form.album }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Orden</label>
+                {{ form.orden }}
+            </div>
+            <div class="col-12">
+                <label class="form-label">Nombre</label>
+                {{ form.nombre }}
+            </div>
+            <div class="col-12">
+                <label class="form-label">Descripción</label>
+                {{ form.descripcion }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Precio</label>
+                {{ form.precio }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Stock disponible</label>
+                {{ form.stock }}
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    {{ form.visible }} <label class="form-check-label ms-2">Visible</label>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    {{ form.mostrar_stock }} <label class="form-check-label ms-2">Mostrar stock al público</label>
+                </div>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Imágenes de la galería</label>
+                {% if not producto %}
+                {{ form.imagenes }}
+                <div class="form-text">Máximo 4 imágenes por producto. Selecciona la principal en la galería de abajo.</div>
+                {% for error in form.imagenes.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+                <label class="form-label">Video del producto</label>
+                {{ form.video }}
+                <div class="form-text">Opcional: MP4, WebM o MOV de máximo 10 segundos.</div>
+                {% for error in form.video.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+                {% endif %}
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary">{% if producto %}<i class="bi bi-save me-1"></i>Guardar cambios{% else %}{{ mode }}{% endif %}</button>
+            <a href="{% url 'panel_dashboard' %}" class="btn btn-outline-secondary">Volver</a>
+        </div>
+    </form>
+
+    {% if producto %}
+        <section class="media-upload-panel mb-4">
+            <div>
+                <h2 class="h5 fw-bold mb-1">Agregar imágenes</h2>
+                <p class="small text-secondary mb-0">{{ imagenes|length }} de 4 imágenes usadas. Elige archivos y confirma la subida.</p>
+            </div>
+            <form method="post" action="{% url 'producto_imagenes_subir' producto.id %}" enctype="multipart/form-data" class="media-upload-form">
+                {% csrf_token %}
+                <input type="file" name="imagenes" accept="image/*" multiple class="form-control" {% if imagenes|length >= 4 %}disabled{% endif %}>
+                <button type="submit" class="btn btn-primary rounded-pill" {% if imagenes|length >= 4 %}disabled{% endif %}>
+                    <i class="bi bi-cloud-arrow-up me-1"></i>Subir imágenes
+                </button>
+            </form>
+        </section>
+        <section class="media-upload-panel mb-4">
+            <div>
+                <h2 class="h5 fw-bold mb-1">Video del producto</h2>
+                <p class="small text-secondary mb-0">MP4, WebM o MOV de máximo 10 segundos y 25 MB.</p>
+            </div>
+            <form method="post" action="{% url 'producto_video_subir' producto.id %}" enctype="multipart/form-data" class="media-upload-form">
+                {% csrf_token %}
+                <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime" class="form-control" data-product-video="1">
+                <button type="submit" class="btn btn-primary rounded-pill"><i class="bi bi-film me-1"></i>Subir video</button>
+            </form>
+            {% if producto.video %}<div class="w-100 small text-success"><i class="bi bi-check-circle me-1"></i>Ya hay un video cargado; al subir otro se reemplaza.</div>{% endif %}
+        </section>
+        <hr class="my-4">
+        <h2 class="h5 fw-bold mb-3 section-title-frame"><i class="bi bi-images me-2"></i>Galería actual</h2>
+        <div class="row g-3">
+            {% for imagen in imagenes %}
+                <div class="col-6 col-md-3">
+                    <div class="border rounded-4 p-2">
+                        <img src="{{ imagen.imagen.url }}" alt="{{ producto.nombre }}" class="w-100 rounded-3 mb-2" style="height: 140px; object-fit: cover;">
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if not imagen.es_principal %}
+                                <form method="post" action="{% url 'producto_imagen_principal' imagen.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Principal</button>
+                                </form>
+                            {% else %}
+                                <span class="badge text-bg-success">Principal</span>
+                            {% endif %}
+                            <form method="post" action="{% url 'producto_imagen_eliminar' imagen.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-secondary">Este producto todavía no tiene imágenes.</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

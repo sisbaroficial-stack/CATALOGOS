@@ -1,0 +1,29 @@
+{% extends 'catalogo/base_catalogo.html' %}
+
+{% block title %}Acceso admin{% endblock %}
+{% block hero_title %}Acceso al panel{% endblock %}
+{% block hero_text %}Usa tu usuario y contraseña de Django para administrar el catálogo.{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="surface-card p-4">
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Usuario</label>
+                    <input type="text" name="username" class="form-control form-control-lg" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Contraseña</label>
+                    <input type="password" name="password" class="form-control form-control-lg" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">Entrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
