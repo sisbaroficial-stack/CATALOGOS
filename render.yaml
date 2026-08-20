@@ -24,31 +24,13 @@ services:
         value: "True"
 
       - key: SERVE_MEDIA
-        value: "False"
+        value: "True"
 
-      # Los archivos de productos, videos y logo se guardan directamente en
-      # Cloudflare R2, no en el sistema efímero de Render.
-      - key: MEDIA_STORAGE
-        value: "r2"
-
-      - key: R2_ACCOUNT_ID
-        sync: false
-
-      - key: R2_ACCESS_KEY_ID
-        sync: false
-
-      - key: R2_SECRET_ACCESS_KEY
-        sync: false
-
-      - key: R2_BUCKET_NAME
-        sync: false
-
-      # Dominio público de R2, sin https:// (por ejemplo: pub-xxx.r2.dev).
-      - key: R2_PUBLIC_DOMAIN
-        sync: false
-
-      - key: R2_REGION
-        value: "auto"
+      # En el plan Free el almacenamiento es temporal. Al cambiar a Starter,
+      # adjunta un Persistent Disk en /var/data y cambia este valor a
+      # /var/data/media. Django seguirá usando las mismas URLs /media/.
+      - key: MEDIA_ROOT
+        value: "/tmp/media"
 
       - key: DATABASE_URL
         fromDatabase:

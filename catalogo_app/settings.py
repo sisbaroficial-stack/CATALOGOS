@@ -94,64 +94,19 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
-SERVE_MEDIA = env_bool('SERVE_MEDIA', DEBUG)
-
-# En producción, Render no conserva archivos escritos en su disco local. Al
-# establecer MEDIA_STORAGE=r2, todos los ImageField/FileField existentes
-# guardan y leen los archivos directamente desde Cloudflare R2 (S3-compatible).
-MEDIA_STORAGE = os.getenv('MEDIA_STORAGE', 'filesystem').strip().lower()
-
-if MEDIA_STORAGE not in {'filesystem', 'r2'}:
-    raise ImproperlyConfigured('MEDIA_STORAGE debe ser "filesystem" o "r2".')
-
-if MEDIA_STORAGE == 'r2':
-    R2_ACCOUNT_ID = os.getenv('R2_ACCOUNT_ID', '').strip()
-    R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', '').strip()
-    R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY', '').strip()
-    R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', '').strip()
-    R2_PUBLIC_DOMAIN = os.getenv('R2_PUBLIC_DOMAIN', '').strip()
-    missing_r2_settings = [
-        name for name, value in {
-            'R2_ACCOUNT_ID': R2_ACCOUNT_ID,
-            'R2_ACCESS_KEY_ID': R2_ACCESS_KEY_ID,
-            'R2_SECRET_ACCESS_KEY': R2_SECRET_ACCESS_KEY,
-            'R2_BUCKET_NAME': R2_BUCKET_NAME,
-            'R2_PUBLIC_DOMAIN': R2_PUBLIC_DOMAIN,
-        }.items() if not value
-    ]
-    if missing_r2_settings:
-        raise ImproperlyConfigured(
-            'Faltan variables de Cloudflare R2: ' + ', '.join(missing_r2_settings)
-        )
-
-    # django-storages espera únicamente el host, sin protocolo ni barra final.
-    R2_PUBLIC_DOMAIN = R2_PUBLIC_DOMAIN.removeprefix('https://').removeprefix('http://').rstrip('/')
-    default_storage = {
-        'BACKEND': 'storages.backends.s3.S3Storage',
-        'OPTIONS': {
-            'access_key': R2_ACCESS_KEY_ID,
-            'secret_key': R2_SECRET_ACCESS_KEY,
-            'bucket_name': R2_BUCKET_NAME,
-            'region_name': os.getenv('R2_REGION', 'auto'),
-            'endpoint_url': f'https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com',
-            'custom_domain': R2_PUBLIC_DOMAIN,
-            'querystring_auth': False,
-            'file_overwrite': True,
-        },
-    }
-else:
-    default_storage = {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
-    }
-
 STORAGES = {
-    'default': default_storage,
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
+MEDIA_URL = '/media/'
+# En Free se usa /tmp/media. Al adjuntar el disco persistente de Render,
+# cambia solo MEDIA_ROOT a /var/data/media; los ImageField/FileField no cambian.
+MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
+SERVE_MEDIA = env_bool('SERVE_MEDIA', DEBUG)
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = env_bool('DJANGO_SECURE_SSL_REDIRECT', not DEBUG)
